@@ -3,11 +3,12 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
+using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
-using Microsoft.Owin.Security.DataProtection;
-using Microsoft.Owin.Security.Google;
+using Microsoft.Owin.Security.OpenIdConnect;
 using Owin;
 using OpenID_Sample.Models;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace OpenID_Sample
 {
@@ -16,54 +17,21 @@ namespace OpenID_Sample
         // For more information on configuring authentication, please visit http://go.microsoft.com/fwlink/?LinkId=301883
         public void ConfigureAuth(IAppBuilder app)
         {
-            // Configure the db context, user manager and signin manager to use a single instance per request
-            app.CreatePerOwinContext(ApplicationDbContext.Create);
-            app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
-            app.CreatePerOwinContext<ApplicationSignInManager>(ApplicationSignInManager.Create);
+            app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
 
-            // Enable the application to use a cookie to store information for the signed in user
-            // and to use a cookie to temporarily store information about a user logging in with a third party login provider
-            // Configure the sign in cookie
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
-                LoginPath = new PathString("/Account/Login"),
-                Provider = new CookieAuthenticationProvider
+            app.UseCookieAuthentication(new CookieAuthenticationOptions());
+
+            app.UseOpenIdConnectAuthentication(
+                new OpenIdConnectAuthenticationOptions
                 {
-                    OnValidateIdentity = SecurityStampValidator.OnValidateIdentity<ApplicationUserManager, ApplicationUser>(
-                        validateInterval: TimeSpan.FromMinutes(30),
-                        regenerateIdentity: (manager, user) => user.GenerateUserIdentityAsync(manager))
-                }
-            });
-            // Use a cookie to temporarily store information about a user logging in with a third party login provider
-            app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
-
-            // Enables the application to temporarily store user information when they are verifying the second factor in the two-factor authentication process.
-            app.UseTwoFactorSignInCookie(DefaultAuthenticationTypes.TwoFactorCookie, TimeSpan.FromMinutes(5));
-
-            // Enables the application to remember the second login verification factor such as phone or email.
-            // Once you check this option, your second step of verification during the login process will be remembered on the device where you logged in from.
-            // This is similar to the RememberMe option when you log in.
-            app.UseTwoFactorRememberBrowserCookie(DefaultAuthenticationTypes.TwoFactorRememberBrowserCookie);
-
-            // Uncomment the following lines to enable logging in with third party login providers
-            //app.UseMicrosoftAccountAuthentication(
-            //    clientId: "",
-            //    clientSecret: "");
-
-            //app.UseTwitterAuthentication(
-            //   consumerKey: "",
-            //   consumerSecret: "");
-
-            //app.UseFacebookAuthentication(
-            //   appId: "",
-            //   appSecret: "");
-
-            //app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
-            //{
-            //    ClientId = "",
-            //    ClientSecret = ""
-            //});
+                    ClientId = "a79acc19c5ddd565007918d7e3a61cd490de86e5ec9179f445802285b4750999",
+                    ClientSecret = "214e85448c1f3c276797ab49e3817804c9555a39b4cc025fa00a135206d8b19d",
+                    Authority = "https://oauth2id.dev/",
+                    RequireHttpsMetadata = true,
+                    ResponseType = "code",
+                    Scope = "openid",
+                    RedirectUri = "https://localhost:44352/",
+                });
         }
     }
 }
